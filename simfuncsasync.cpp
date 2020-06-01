@@ -4,26 +4,36 @@
 
 #include "ctpl.h"
 
+AsyncObservation::AsyncObservation(double compensation, double oc_prob) :
+        COMPENSATION(compensation),
+        OC_PROBABILITY(oc_prob) {
+
+}
+
 static unsigned int threadCount = std::thread::hardware_concurrency();
 
 std::unique_ptr<std::vector<std::tuple<double, double, int>>>
-runObservationAsync(int id, int observationCounts, int dayCount) {
+AsyncObservation::runObservationAsync(int id, int observationCounts, int dayCount) {
 
-    std::cout << "Scheduled " << observationCounts << " on thread " << id << std::endl;
+//    std::cout << "Scheduled " << observationCounts << " on thread " << id << std::endl;
+
+    ObservationHolder holder(COMPENSATION, OC_PROBABILITY);
 
     auto vector = std::make_unique<std::vector<std::tuple<double, double, int>>>(observationCounts);
 
     for (int i = 0; i < observationCounts; i++) {
 
-        vector->push_back(runObservation(dayCount));
+        vector->push_back(holder.runObservation(dayCount));
 
     }
+
+    std::cout << "Thread " << id << " has finished. " << std::endl;
 
     return vector;
 }
 
 std::tuple<std::tuple<double, double>, std::tuple<double, double>, std::tuple<double, double>>
-runSimulationAsync(int observations, int dayCount, double confidence) {
+AsyncObservation::runSimulationAsync(int observations, int dayCount, double confidence) {
 
     std::cout << "Running " << observations << " observations on " << threadCount << " threads" << std::endl;
 
@@ -38,7 +48,9 @@ runSimulationAsync(int observations, int dayCount, double confidence) {
     int observationsPerThread = observations / (int) threadCount;
 
     for (int i = 0; i < threadCount; i++) {
-        results[i] = threadPool.push(runObservationAsync, observationsPerThread, dayCount);
+        results[i] = threadPool.push([this, observationsPerThread, dayCount](int id){
+            return this->runObservationAsync(id, observationsPerThread, dayCount);
+        });
     }
 
     double averageCostPF = 0,

@@ -18,15 +18,16 @@
 
 #define PICK_UP_PROBABILITY .75
 
-static double COMPENSATION;
-
-static double OC_PROBABILITY;
-
 using namespace std::chrono;
 
-static std::default_random_engine engine(duration_cast<milliseconds>(system_clock::now().time_since_epoch()).count());
-static std::uniform_int_distribution<int> distribution(MIN_DELIVERIES, MAX_DELIVERIES);
-static std::uniform_real_distribution<double> randomDist(0.0, 1.0);
+ObservationHolder::ObservationHolder(double compensation, double oc_probability)
+        : engine(duration_cast<milliseconds>(system_clock::now().time_since_epoch()).count()),
+          distribution(MIN_DELIVERIES, MAX_DELIVERIES),
+          randomDist(0.0, 1.0),
+          COMPENSATION(compensation),
+          OC_PROBABILITY(oc_probability) {
+
+}
 
 class DayInfo {
 
@@ -63,7 +64,8 @@ public:
 
 };
 
-std::tuple<int, int> getDeliveriesForDay() {
+
+std::tuple<int, int> ObservationHolder::getDeliveriesForDay() {
 
     int newPackages = distribution(engine);
 
@@ -82,7 +84,7 @@ std::tuple<int, int> getDeliveriesForDay() {
     return std::make_tuple(newPackagesHome, newPackagesLocker);
 }
 
-int calculatePossibleOCs(int lockerPackages) {
+int ObservationHolder::calculatePossibleOCs(int lockerPackages) {
 
     int possibleOCs = 0;
 
@@ -95,7 +97,7 @@ int calculatePossibleOCs(int lockerPackages) {
     return possibleOCs;
 }
 
-int calculatePackagesTakenByOC(int possibleOCs) {
+int ObservationHolder::calculatePackagesTakenByOC(int possibleOCs) {
 
     int packagesTaken = 0;
 
@@ -117,7 +119,7 @@ int calculatePackagesTakenByOC(int possibleOCs) {
  *      Costs of delivery by PF and OC
  *      Locker status at the end of the day (Home and Locker)
  */
-DayInfo simulateDay(int packagesLeftOverLocker, int packagesLeftOverHome) {
+DayInfo ObservationHolder::simulateDay(int packagesLeftOverLocker, int packagesLeftOverHome) {
 
     int newPackagesLocker, newPackagesHome;
 
@@ -155,7 +157,7 @@ DayInfo simulateDay(int packagesLeftOverLocker, int packagesLeftOverHome) {
  * @param dayCount
  * @return
  */
-std::tuple<double, double, int> runObservation(int dayCount) {
+std::tuple<double, double, int> ObservationHolder::runObservation(int dayCount) {
 
     double totalCostPF = 0, totalCostCompensation = 0;
 
@@ -205,7 +207,7 @@ std::tuple<double, double, int> runObservation(int dayCount) {
  * @return The min value and the max value for the compensation cost and profession delivery cost and the max amount of items in the lockers, with the confidence specified
  */
 std::tuple<std::tuple<double, double>, std::tuple<double, double>, std::tuple<double, double>>
-runSimulation(int observations, int dayCount, double confidence) {
+ObservationHolder::runSimulation(int observations, int dayCount, double confidence) {
     std::vector<double> costCompensationData(observations), costPFData(observations);
 
     std::vector<int> packagesInLockers(observations);
@@ -303,10 +305,4 @@ runSimulation(int observations, int dayCount, double confidence) {
 
     return std::make_tuple(std::make_tuple(min, max), std::make_tuple(minPF, maxPF),
                            std::make_tuple(minPackages, maxPackages));
-}
-
-void setCompensation(double compensation, double oc_probability) {
-    COMPENSATION = compensation;
-
-    OC_PROBABILITY = oc_probability;
 }
