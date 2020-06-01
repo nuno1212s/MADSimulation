@@ -140,6 +140,7 @@ DayInfo ObservationHolder::simulateDay(int packagesLeftOverLocker, int packagesL
 
     double costPF;
 
+    //The packages left from the day before will be delivered on the following day
     if (packagesLeftOverHome <= PF_PRICE_CHANGE) {
         costPF = packagesLeftOverHome * PRICE_PF_UNDER_PC;
     } else {
