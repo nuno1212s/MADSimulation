@@ -9,6 +9,8 @@ static unsigned int threadCount = std::thread::hardware_concurrency();
 std::unique_ptr<std::vector<std::tuple<double, double, int>>>
 runObservationAsync(int id, int observationCounts, int dayCount) {
 
+    std::cout << "Scheduled " << observationCounts << " on thread " << id << std::endl;
+
     auto vector = std::make_unique<std::vector<std::tuple<double, double, int>>>(observationCounts);
 
     for (int i = 0; i < observationCounts; i++) {
@@ -47,7 +49,7 @@ runSimulationAsync(int observations, int dayCount, double confidence) {
             varianceCostPF = 0,
             varianceMaxPackages = 0;
 
-    boost::math::students_t_distribution<double> dist(observations);
+    boost::math::students_t_distribution<double> dist(observations - 1);
 
     double invAlpha = (1 - confidence) / 2;
 

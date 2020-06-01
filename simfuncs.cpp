@@ -218,7 +218,7 @@ runSimulation(int observations, int dayCount, double confidence) {
             varianceCostPF = 0,
             varianceMaxPackages = 0;
 
-    boost::math::students_t_distribution<double> dist(observations);
+    boost::math::students_t_distribution<double> dist(observations - 1);
 
     double invAlpha = (1 - confidence) / 2;
 
