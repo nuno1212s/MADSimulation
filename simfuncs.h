@@ -18,6 +18,14 @@ public:
             std::tuple<double, double>> runSimulation(int observations, int dayCount, double confidence);
 
 private:
+    /*
+     * We encapsulate these into their own observation holder so that
+     * We can create many of these holders and allow them to each have their own
+     * Random number generator, which allows them to be parallelized extremely
+     * Easily with almost linear performance benefits.
+     *
+     * Using these engines as global variables removes most of the performance benefits.
+     */
     std::default_random_engine engine;
     std::uniform_int_distribution<int> distribution;
     std::uniform_real_distribution<double> randomDist;

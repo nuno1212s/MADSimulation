@@ -2,7 +2,6 @@
 #include <random>
 #include <tuple>
 #include <iomanip>
-#include "simfuncs.h"
 #include <chrono>
 #include "simfuncsasync.h"
 

@@ -48,6 +48,11 @@ AsyncObservation::runSimulationAsync(int observations, int dayCount, double conf
     int observationsPerThread = observations / (int) threadCount;
 
     for (int i = 0; i < threadCount; i++) {
+        if (i == threadCount - 1) {
+            //On the last created thread, assign any left over observations to the last thread.
+            observationsPerThread += (observations % (int) threadCount);
+        }
+
         results[i] = threadPool.push([this, observationsPerThread, dayCount](int id){
             return this->runObservationAsync(id, observationsPerThread, dayCount);
         });
