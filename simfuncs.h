@@ -36,7 +36,7 @@ private:
 
     int calculatePossibleOCs(int lockerPackages);
 
-    int calculatePackagesTakenByOC(int possibleOCs);
+    int calculatePackagesTakenByOC(int possibleOCs, int maxPackagesToTake);
 
     DayInfo simulateDay(int packagesLeftOverLocker, int packagesLeftOverHome);
 };

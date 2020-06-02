@@ -97,11 +97,11 @@ int ObservationHolder::calculatePossibleOCs(int lockerPackages) {
     return possibleOCs;
 }
 
-int ObservationHolder::calculatePackagesTakenByOC(int possibleOCs) {
+int ObservationHolder::calculatePackagesTakenByOC(int possibleOCs, int maxPackages) {
 
     int packagesTaken = 0;
 
-    for (int i = 0; i < possibleOCs; i++) {
+    for (int i = 0; i < possibleOCs && packagesTaken <= maxPackages; i++) {
         if (randomDist(engine) <= OC_PROBABILITY) {
             packagesTaken++;
         }
@@ -132,7 +132,7 @@ DayInfo ObservationHolder::simulateDay(int packagesLeftOverLocker, int packagesL
     //All possible OCs are people that pick up locker packages
     int notDeliveredLocker = lockerPackages - possibleOCs;
 
-    int packagesTakenByOCs = calculatePackagesTakenByOC(possibleOCs);
+    int packagesTakenByOCs = calculatePackagesTakenByOC(possibleOCs, newPackagesHome);
 
     double costCompensation = packagesTakenByOCs * COMPENSATION;
 
