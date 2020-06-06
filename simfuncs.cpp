@@ -271,6 +271,8 @@ Results doResults(const std::vector<double> &costsPF, const std::vector<double> 
             varianceCostPF = 0,
             varianceMaxPackages = 0;
 
+    int absMaxPackages = 0;
+
     boost::math::students_t_distribution<double> dist(observations - 1);
 
     double invAlpha = (1 - confidence) / 2;
@@ -288,6 +290,8 @@ Results doResults(const std::vector<double> &costsPF, const std::vector<double> 
         totalCostComp += (costsComp[i]);
 
         totalMaxPackages += maxPackages[i];
+
+        absMaxPackages = std::max(absMaxPackages, maxPackages[i]);
 
     }
 
@@ -341,7 +345,7 @@ Results doResults(const std::vector<double> &costsPF, const std::vector<double> 
     double minPackages = averageMaxPackages - hPackages, maxPackage = averageMaxPackages + hPackages;
 
     return Results{minTotal, maxTotal, minComp, maxCOmp,
-                   minPF, maxPF, minPackages, maxPackage};
+                   minPF, maxPF, minPackages, maxPackage, absMaxPackages};
 }
 
 /**

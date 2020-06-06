@@ -37,6 +37,8 @@ void runWithConfidence(int observations, int dayCount, double confidence, double
               << result.getMaxPackages()
               << std::endl;
 
+    std::cout << "Max packages: " << result.getMaxPackageTotal() << std::endl;
+
     double totalCostMin = result.getMinTotal(),
             totalCostMax = result.getMaxTotal();
 

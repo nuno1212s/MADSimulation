@@ -14,11 +14,14 @@ private:
             minComp, maxComp,
             minPF, maxPF,
             minPackages, maxPackages;
+
+    int maxPackageTotal;
 public:
     Results(double minTotal, double maxTotal, double minComp, double maxComp,
-            double minPF, double maxPF, double minPackages, double maxPackages) :
+            double minPF, double maxPF, double minPackages, double maxPackages, int maxPackageTotal) :
             minTotal(minTotal), maxTotal(maxTotal), minComp(minComp), maxComp(maxComp),
-            minPF(minPF), maxPF(maxPF), minPackages(minPackages), maxPackages(maxPackages) {}
+            minPF(minPF), maxPF(maxPF), minPackages(minPackages), maxPackages(maxPackages),
+            maxPackageTotal(maxPackageTotal) {}
 
     double getMinTotal() const {
         return minTotal;
@@ -50,6 +53,10 @@ public:
 
     double getMaxPackages() const {
         return maxPackages;
+    }
+
+    int getMaxPackageTotal() const {
+        return maxPackageTotal;
     }
 
 };
