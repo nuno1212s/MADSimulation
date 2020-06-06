@@ -68,12 +68,10 @@ public:
 
 private:
     /*
-     * We encapsulate these into their own observation holder so that
+     * We encapsulate the rand buffer data into an observation holder.
      * We can create many of these holders and allow them to each have their own
      * Random number generator, which allows them to be parallelized extremely
      * Easily with almost linear performance benefits.
-     *
-     * Using these engines as global variables removes most of the performance benefits.
      */
     struct drand48_data randBuffer;
     double COMPENSATION;

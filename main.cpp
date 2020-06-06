@@ -4,7 +4,6 @@
 #include <iomanip>
 #include <chrono>
 #include "simfuncsasync.h"
-#include "simfuncs.h"
 
 static std::vector<std::tuple<double, double>> defaultCompensations = {{0,   0.01},
                                                                        {.5,  .25},

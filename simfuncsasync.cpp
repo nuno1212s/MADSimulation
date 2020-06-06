@@ -7,15 +7,11 @@
 AsyncObservation::AsyncObservation(double compensation, double oc_prob) :
         COMPENSATION(compensation),
         OC_PROBABILITY(oc_prob),
-        threadsToUse(std::thread::hardware_concurrency()){
+        threadsToUse(std::thread::hardware_concurrency()) {}
 
-}
-
-AsyncObservation::AsyncObservation(double compensation, double oc_prob, unsigned  int threads):
-    COMPENSATION(compensation), OC_PROBABILITY(oc_prob),
-    threadsToUse(threads){
-
-}
+AsyncObservation::AsyncObservation(double compensation, double oc_prob, unsigned int threads) :
+        COMPENSATION(compensation), OC_PROBABILITY(oc_prob),
+        threadsToUse(threads) {}
 
 std::unique_ptr<std::vector<std::tuple<double, double, int>>>
 AsyncObservation::runObservationAsync(int id, int observationCounts, int dayCount) {
@@ -56,7 +52,7 @@ AsyncObservation::runSimulationAsync(int observations, int dayCount, double conf
             observationsPerThread += (observations % (int) threadsToUse);
         }
 
-        results[i] = threadPool.push([this, observationsPerThread, dayCount](int id){
+        results[i] = threadPool.push([this, observationsPerThread, dayCount](int id) {
             return this->runObservationAsync(id, observationsPerThread, dayCount);
         });
     }

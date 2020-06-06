@@ -13,7 +13,6 @@ public:
 
     AsyncObservation(double, double, unsigned int);
 
-
     Results runSimulationAsync(int observations, int dayCount, double confidence);
 
 private:
