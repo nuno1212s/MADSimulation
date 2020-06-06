@@ -13,21 +13,23 @@ static std::vector<std::tuple<double, double>> defaultCompensations = {{0,   0.0
 
 void runWithConfidence(int observations, int dayCount, double confidence, double compensation, double oc_probability) {
 
-    AsyncObservation observation(compensation, oc_probability);
+    ObservationHolder observation(compensation, oc_probability);
 
     auto timeStart = std::chrono::system_clock::now().time_since_epoch();
 
-    auto result = observation.runSimulationAsync(observations, dayCount, confidence);
+    auto result = observation.runSimulation(observations, dayCount, confidence);
 
     auto timeEnd = std::chrono::system_clock::now().time_since_epoch() - timeStart;
 
     std::cout << "Done in " << std::chrono::duration_cast< std::chrono::milliseconds> (timeEnd).count() << " ms" << std::endl;
 
-    auto resultCompensation = std::get<0>(result);
+    auto totalResult = result.getTotalCost();
 
-    auto PFCost = std::get<1>(result);
+    auto resultCompensation = result.getTotalCostCompensation();
 
-    auto packageResult = std::get<2>(result);
+    auto PFCost = result.getTotalCostPF();
+
+    auto packageResult = result.getTotalPackages();
 
     std::cout << "RESULTS FOR " << compensation << "€ with probability " << oc_probability << std::endl;
 
@@ -42,10 +44,7 @@ void runWithConfidence(int observations, int dayCount, double confidence, double
               << std::get<1>(packageResult)
               << std::endl;
 
-    double totalCostMin = std::get<0>(PFCost) + std::get<0>(resultCompensation),
-            totalCostMax = std::get<1>(PFCost) + std::get<1>(resultCompensation);
-
-    std::cout << "Total cost: " << std::endl << "Min: " << totalCostMin << " | Max: " << totalCostMax << std::endl;
+    std::cout << "Total cost: " << std::endl << "Min: " << std::get<0>(totalResult) << " | Max: " << std::get<1>(totalResult) << std::endl;
 }
 
 void checkSimType(int observations, int dayCount, double confidence) {

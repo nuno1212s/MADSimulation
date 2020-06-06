@@ -4,8 +4,41 @@
 #include <tuple>
 #include <random>
 #include <utility>
+#include <memory>
 
 class DayInfo;
+
+class Results {
+
+public:
+    const std::tuple<double, double> &getTotalCost() const {
+        return totalCost;
+    }
+
+    const std::tuple<double, double> &getTotalCostPF() const {
+        return totalCostPF;
+    }
+
+    const std::tuple<double, double> &getTotalCostCompensation() const {
+        return totalCostCompensation;
+    }
+
+    const std::tuple<double, double> &getTotalPackages() const {
+        return totalPackages;
+    }
+
+    Results(std::tuple<double, double> totalCost, std::tuple<double, double> totalCostPF,
+            std::tuple<double, double> totalCostComp,
+            std::tuple<double, double> totalPackages);
+
+private:
+    std::tuple<double, double> totalCost, totalCostPF, totalCostCompensation,
+            totalPackages;
+
+};
+
+Results doResults(std::vector<double> &costPF, std::vector<double> &costCompensation, std::vector<int> &totalPackages,
+                  int observations, double confidence);
 
 class ObservationHolder {
 
@@ -14,8 +47,8 @@ public:
 
     std::tuple<double, double, int> runObservation(int dayCount);
 
-    std::tuple<std::tuple<double, double>, std::tuple<double, double>,
-            std::tuple<double, double>> runSimulation(int observations, int dayCount, double confidence);
+
+    Results runSimulation(int observations, int dayCount, double confidence);
 
 private:
     /*
@@ -32,13 +65,13 @@ private:
     double COMPENSATION;
     double OC_PROBABILITY;
 
-    std::tuple<int, int> getDeliveriesForDay();
+    void getDeliveriesForDay(int &, int &);
 
     int calculatePossibleOCs(int lockerPackages);
 
     int calculatePackagesTakenByOC(int possibleOCs, int maxPackagesToTake);
 
-    DayInfo simulateDay(int packagesLeftOverLocker, int packagesLeftOverHome);
+    void simulateDay(int packagesLeftOverLocker, int packagesLeftOverHome, DayInfo &);
 };
 
 

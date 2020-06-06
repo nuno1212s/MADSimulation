@@ -20,60 +20,122 @@
 
 using namespace std::chrono;
 
+long simulationTimeTaken = 0;
+
 ObservationHolder::ObservationHolder(double compensation, double oc_probability)
         : engine(duration_cast<milliseconds>(system_clock::now().time_since_epoch()).count()),
           distribution(MIN_DELIVERIES, MAX_DELIVERIES),
           randomDist(0.0, 1.0),
           COMPENSATION(compensation),
           OC_PROBABILITY(oc_probability) {
-
+    srand(time(nullptr));
 }
 
 class DayInfo {
 
 private:
-    std::tuple<int, int> packagesGenerated;
 
-    std::tuple<int, int, int> deliveriesMade;
+    int packagesGeneratedHome, packagesGeneratedLocker;
 
-    std::tuple<double, double> deliveryCosts;
+    int deliveriesMadePF, deliveriesByOC, pickedUp;
 
-    std::tuple<int, int> lockerStatusEndOfDay;
+    double costByPF, costByComp;
+
+    int packagesLeftOverLocker, packagesLeftOverHome;
 
 public:
-    DayInfo(std::tuple<int, int> packages, std::tuple<int, int, int> deliveries, std::tuple<double, double> costs,
-            std::tuple<int, int> lockerStatus)
-            : packagesGenerated(std::move(packages)), deliveriesMade(std::move(deliveries)),
-              deliveryCosts(std::move(costs)), lockerStatusEndOfDay(std::move(lockerStatus)) {}
-
-    const std::tuple<int, int> &getPackagesGenerated() const {
-        return packagesGenerated;
+    int getPackagesGeneratedHome() const {
+        return packagesGeneratedHome;
     }
 
-    const std::tuple<int, int, int> &getDeliveriesMade() const {
-        return deliveriesMade;
+    int getPackagesGeneratedLocker() const {
+        return packagesGeneratedLocker;
     }
 
-    const std::tuple<double, double> &getDeliveryCosts() const {
-        return deliveryCosts;
+    int getDeliveriesMadePf() const {
+        return deliveriesMadePF;
     }
 
-    const std::tuple<int, int> &getLockerStatusEndOfDay() const {
-        return lockerStatusEndOfDay;
+    int getDeliveriesByOc() const {
+        return deliveriesByOC;
     }
 
+    int getPickedUp() const {
+        return pickedUp;
+    }
+
+    double getCostByPf() const {
+        return costByPF;
+    }
+
+    double getCostByComp() const {
+        return costByComp;
+    }
+
+    int getPackagesLeftOverLocker() const {
+        return packagesLeftOverLocker;
+    }
+
+    int getPackagesLeftOverHome() const {
+        return packagesLeftOverHome;
+    }
+
+    void setPackagesGeneratedHome(int packagesGeneratedMin) {
+        DayInfo::packagesGeneratedHome = packagesGeneratedMin;
+    }
+
+    void setPackagesGeneratedLocker(int packagesGeneratedMax) {
+        DayInfo::packagesGeneratedLocker = packagesGeneratedMax;
+    }
+
+    void setDeliveriesMadePf(int deliveriesMadePf) {
+        deliveriesMadePF = deliveriesMadePf;
+    }
+
+    void setDeliveriesByOc(int deliveriesByOc) {
+        deliveriesByOC = deliveriesByOc;
+    }
+
+    void setPickedUp(int pickedUp) {
+        DayInfo::pickedUp = pickedUp;
+    }
+
+    void setCostByPf(double costByPf) {
+        costByPF = costByPf;
+    }
+
+    void setCostByComp(double costByComp) {
+        DayInfo::costByComp = costByComp;
+    }
+
+    void setPackagesLeftOverLocker(int packagesLeftOverLocker) {
+        DayInfo::packagesLeftOverLocker = packagesLeftOverLocker;
+    }
+
+    void setPackagesLeftOverHome(int packagesLeftOverHome) {
+        DayInfo::packagesLeftOverHome = packagesLeftOverHome;
+    }
 };
 
+Results::Results(std::tuple<double, double> totalCost, std::tuple<double, double> totalCostPF,
+                 std::tuple<double, double> totalCostCompensation, std::tuple<double, double> totalPackages) :
+        totalCost(std::move(totalCost)),
+        totalCostPF(std::move(totalCostPF)),
+        totalCostCompensation(std::move(totalCostCompensation)),
+        totalPackages(std::move(totalPackages)) {
+}
 
-std::tuple<int, int> ObservationHolder::getDeliveriesForDay() {
+void ObservationHolder::getDeliveriesForDay(int &home, int &locker) {
 
-    int newPackages = distribution(engine);
+    int newPackages = (rand() % (MAX_DELIVERIES - MIN_DELIVERIES)) + MIN_DELIVERIES;
 
     int newPackagesHome = 0;
     int newPackagesLocker = 0;
 
+    double prob = HOME_PROBABILITY * 100;
+
     for (int i = 0; i < newPackages; i++) {
-        if (randomDist(engine) <= HOME_PROBABILITY) {
+        if ((rand() % 100) <= prob) {
             newPackagesHome++;
         } else {
             newPackagesLocker++;
@@ -81,15 +143,18 @@ std::tuple<int, int> ObservationHolder::getDeliveriesForDay() {
 
     }
 
-    return std::make_tuple(newPackagesHome, newPackagesLocker);
+    home = newPackagesHome;
+    locker = newPackagesLocker;
 }
 
 int ObservationHolder::calculatePossibleOCs(int lockerPackages) {
 
     int possibleOCs = 0;
 
+    double prob = PICK_UP_PROBABILITY * 100;
+
     for (int i = 0; i < lockerPackages; i++) {
-        if (randomDist(engine) <= PICK_UP_PROBABILITY) {
+        if ((rand() % 100) <= prob) {
             possibleOCs++;
         }
     }
@@ -101,8 +166,10 @@ int ObservationHolder::calculatePackagesTakenByOC(int possibleOCs, int maxPackag
 
     int packagesTaken = 0;
 
+    double prob = OC_PROBABILITY * 100;
+
     for (int i = 0; i < possibleOCs && packagesTaken <= maxPackages; i++) {
-        if (randomDist(engine) <= OC_PROBABILITY) {
+        if ((rand() % 100) <= prob) {
             packagesTaken++;
         }
     }
@@ -119,11 +186,11 @@ int ObservationHolder::calculatePackagesTakenByOC(int possibleOCs, int maxPackag
  *      Costs of delivery by PF and OC
  *      Locker status at the end of the day (Home and Locker)
  */
-DayInfo ObservationHolder::simulateDay(int packagesLeftOverLocker, int packagesLeftOverHome) {
+void ObservationHolder::simulateDay(int packagesLeftOverLocker, int packagesLeftOverHome, DayInfo &info) {
 
     int newPackagesLocker, newPackagesHome;
 
-    std::tie(newPackagesHome, newPackagesLocker) = getDeliveriesForDay();
+    getDeliveriesForDay(newPackagesHome, newPackagesLocker);
 
     int lockerPackages = packagesLeftOverLocker + newPackagesLocker;
 
@@ -147,10 +214,15 @@ DayInfo ObservationHolder::simulateDay(int packagesLeftOverLocker, int packagesL
         costPF = PF_PRICE_CHANGE * PRICE_PF_UNDER_PC + (packagesLeftOverHome - PF_PRICE_CHANGE) * PRICE_PF_OVER_PC;
     }
 
-    return DayInfo{std::make_tuple(newPackagesHome, newPackagesLocker),
-                   std::make_tuple(packagesLeftOverLocker, packagesTakenByOCs, possibleOCs),
-                   std::make_tuple(costPF, costCompensation),
-                   std::make_tuple(packagesToDeliverPFNextDay, notDeliveredLocker)};
+    info.setPackagesGeneratedHome(newPackagesHome);
+    info.setPackagesGeneratedLocker(newPackagesLocker);
+    info.setPackagesLeftOverLocker(packagesLeftOverLocker);
+    info.setDeliveriesByOc(packagesTakenByOCs);
+    info.setPickedUp(possibleOCs);
+    info.setCostByPf(costPF);
+    info.setCostByComp(costCompensation);
+    info.setPackagesLeftOverLocker(packagesToDeliverPFNextDay);
+    info.setPackagesLeftOverHome(notDeliveredLocker);
 }
 
 /**
@@ -166,25 +238,28 @@ std::tuple<double, double, int> ObservationHolder::runObservation(int dayCount) 
 
     int maxPackagesInLocker = 0;
 
+    DayInfo info{};
+
     for (int day = 0; day < dayCount; day++) {
+        auto t1 = std::chrono::high_resolution_clock::now();
 
-        auto returnValues = simulateDay(packagesLeftOver, packagesLeftOverHome);
+        simulateDay(packagesLeftOver, packagesLeftOverHome, info);
 
-        int newPackagesHome, newPackagesLocker;
+        auto t2 = std::chrono::high_resolution_clock::now();
 
-        std::tie(newPackagesHome, newPackagesLocker) = returnValues.getPackagesGenerated();
+        auto duration = std::chrono::duration_cast<std::chrono::microseconds>(t2 - t1).count();
 
-        int deliveredByPF, deliveriesByOC, pickedUp;
+        simulationTimeTaken += duration;
 
-        std::tie(deliveredByPF, deliveriesByOC, pickedUp) = returnValues.getDeliveriesMade();
+        int newPackagesHome = info.getPackagesGeneratedHome(), newPackagesLocker = info.getPackagesGeneratedLocker();
 
-        double costByPF, costByCompensation;
+        int deliveredByPF = info.getDeliveriesMadePf(),
+                deliveriesByOC = info.getDeliveriesByOc(), pickedUp = info.getPickedUp();
 
-        std::tie(costByPF, costByCompensation) = returnValues.getDeliveryCosts();
+        double costByPF = info.getCostByPf(), costByCompensation = info.getCostByComp();
 
-        int packagesLeftOverLocker, packagesLeftOverForHome;
-
-        std::tie(packagesLeftOverForHome, packagesLeftOverLocker) = returnValues.getLockerStatusEndOfDay();
+        int packagesLeftOverLocker = info.getPackagesLeftOverLocker(),
+                packagesLeftOverForHome = info.getPackagesLeftOverHome();
 
         totalCostPF += costByPF;
 
@@ -194,9 +269,90 @@ std::tuple<double, double, int> ObservationHolder::runObservation(int dayCount) 
 
         packagesLeftOver = packagesLeftOverLocker;
         packagesLeftOverHome = packagesLeftOverForHome;
+
     }
 
     return std::make_tuple(totalCostCompensation, totalCostPF, maxPackagesInLocker);
+}
+
+Results doResults(std::vector<double> &costPF, std::vector<double> &costCompensation,
+                  std::vector<int> &packages, int observations, double confidence) {
+
+    double averageCostTotal = 0,
+            averageCostPF = 0,
+            averageCostCompensation = 0,
+            averageMaxPackages = 0;
+
+    double varianceCostTotal = 0,
+            varianceCostPF = 0,
+            varianceCostCompensation = 0,
+            varianceMaxPackages = 0;
+
+    boost::math::students_t_distribution<double> dist(observations - 1);
+
+    double invAlpha = (1 - confidence) / 2;
+
+    double totalCost = 0, totalCostPF = 0,
+            totalCostCompensation = 0, totalPackages = 0;
+
+    for (int i = 0; i < observations; i++) {
+        totalCost += (costPF[i] + costCompensation[i]);
+
+        totalCostPF += costPF[i];
+        totalCostCompensation += costCompensation[i];
+
+        totalPackages += packages[i];
+    }
+
+    averageCostTotal = totalCost / observations;
+    averageCostCompensation = totalCostCompensation / observations;
+    averageCostPF = totalCostPF / observations;
+    averageMaxPackages = totalPackages / observations;
+
+    for (int i = 0; i < observations; i++) {
+
+        varianceCostTotal += std::pow((costPF[i] + costCompensation[i]) - averageCostTotal, 2);
+
+        varianceCostPF += std::pow(costPF[i] - averageCostPF, 2);
+
+        varianceCostCompensation += std::pow(costCompensation[i] - averageCostCompensation, 2);
+
+        varianceMaxPackages += std::pow(packages[i] - averageMaxPackages, 2);
+    }
+
+    varianceCostTotal /= (double) observations - 1;
+
+    varianceCostPF /= (double) observations - 1;
+
+    varianceCostCompensation /= (double) observations - 1;
+
+    varianceMaxPackages /= (double) observations - 1;
+
+    double T = boost::math::quantile(boost::math::complement(dist, invAlpha));
+
+    double hTotal = T * std::sqrt(varianceCostTotal / observations);
+
+    double hPF = T * std::sqrt(varianceCostPF / observations);
+    double hComp = T * std::sqrt(varianceCostCompensation / observations);
+
+    double hPackage = T * std::sqrt(varianceMaxPackages / observations);
+
+    std::cout << "TIME TAKEN: " << simulationTimeTaken << std::endl;
+
+    std::cout << "Variance cost compensation " << varianceCostCompensation << " | Variance professional "
+              << varianceCostPF << " | Variance max packages " << varianceMaxPackages << std::endl;
+
+    std::cout << "Sum cost compensation: " << totalCostCompensation << " | Sum cost PF: " << totalCostPF
+              << " | Sum packages: "
+              << totalPackages << " | Average CC: " << averageCostCompensation << " | Average PF: "
+              << averageCostPF << " | Average Max packages: " << averageMaxPackages << std::endl;
+
+    return Results{
+            std::make_pair(averageCostTotal - hTotal, averageCostTotal + hTotal),
+            std::make_pair(averageCostPF - hPF, averageCostPF + hPF),
+            std::make_pair(averageCostCompensation - hComp, averageCostCompensation + hComp),
+            std::make_pair(averageMaxPackages - hPackage, averageMaxPackages + hPackage)
+    };
 }
 
 /**
@@ -207,27 +363,11 @@ std::tuple<double, double, int> ObservationHolder::runObservation(int dayCount) 
  * @param confidence
  * @return The min value and the max value for the compensation cost and profession delivery cost and the max amount of items in the lockers, with the confidence specified
  */
-std::tuple<std::tuple<double, double>, std::tuple<double, double>, std::tuple<double, double>>
+Results
 ObservationHolder::runSimulation(int observations, int dayCount, double confidence) {
     std::vector<double> costCompensationData(observations), costPFData(observations);
 
     std::vector<int> packagesInLockers(observations);
-
-    double averageCostPF = 0,
-            averageCostCompensation = 0,
-            averageMaxPackages = 0;
-
-    double varianceCostCompensation = 0,
-            varianceCostPF = 0,
-            varianceMaxPackages = 0;
-
-    boost::math::students_t_distribution<double> dist(observations - 1);
-
-    double invAlpha = (1 - confidence) / 2;
-
-    double totalCostComp = 0, totalCostPF = 0;
-
-    long totalMaxPackagesInLockers = 0;
 
     for (int i = 0; i < observations; i++) {
 
@@ -237,16 +377,11 @@ ObservationHolder::runSimulation(int observations, int dayCount, double confiden
 
         std::tie(observationCostCompensation, observationCostPF, maxPackagesInLockers) = runObservation(dayCount);
 
-        costCompensationData.push_back(observationCostCompensation);
+        costCompensationData[i] = (observationCostCompensation);
 
-        costPFData.push_back(observationCostPF);
+        costPFData[i] = (observationCostPF);
 
-        packagesInLockers.push_back(maxPackagesInLockers);
-
-        totalMaxPackagesInLockers += maxPackagesInLockers;
-
-        totalCostComp += observationCostCompensation;
-        totalCostPF += observationCostPF;
+        packagesInLockers[i] = (maxPackagesInLockers);
 
 //        if (i % 100 == 0) {
 //            std::cout << "Starting observation: " << i << std::endl;
@@ -260,50 +395,5 @@ ObservationHolder::runSimulation(int observations, int dayCount, double confiden
 
     }
 
-    averageCostPF = totalCostPF / observations;
-    averageCostCompensation = totalCostComp / observations;
-
-    averageMaxPackages = ((double) totalMaxPackagesInLockers) / observations;
-
-    for (double &it : costCompensationData) {
-        varianceCostCompensation += std::pow(it - averageCostCompensation, 2);
-    }
-
-    varianceCostCompensation /= (observations - 1);
-
-    for (double &it : costPFData) {
-        varianceCostPF += std::pow(it - averageCostPF, 2);
-    }
-
-    varianceCostPF /= (observations - 1);
-
-    for (int &packages : packagesInLockers) {
-        varianceMaxPackages += std::pow((packages - averageMaxPackages), 2);
-    }
-
-    varianceMaxPackages /= (observations - 1);
-
-    std::cout << "Variance cost compensation " << varianceCostCompensation << " | Variance professional "
-              << varianceCostPF << " | Variance max packages " << varianceMaxPackages << std::endl;
-
-    std::cout << "Sum cost compensation: " << totalCostComp << " | Sum cost PF: " << totalCostPF << " | Sum packages: "
-              << totalMaxPackagesInLockers << " | Average CC: " << averageCostCompensation << " | Average PF: "
-              << averageCostPF << " | Average Max packages: " << averageMaxPackages << std::endl;
-
-    double T = boost::math::quantile(boost::math::complement(dist, invAlpha));
-
-    double h = T * sqrt(varianceCostCompensation / observations);
-
-    double h2 = T * sqrt(varianceCostPF / observations);
-
-    double h3 = T * sqrt(varianceMaxPackages / observations);
-
-    double max = averageCostCompensation + h, min = averageCostCompensation - h;
-
-    double maxPF = averageCostPF + h2, minPF = averageCostPF - h2;
-
-    double maxPackages = averageMaxPackages + h3, minPackages = averageMaxPackages - h3;
-
-    return std::make_tuple(std::make_tuple(min, max), std::make_tuple(minPF, maxPF),
-                           std::make_tuple(minPackages, maxPackages));
+    return doResults(costPFData, costCompensationData, packagesInLockers, observations, confidence);
 }
