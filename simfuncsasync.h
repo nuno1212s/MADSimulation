@@ -4,18 +4,22 @@
 #include <tuple>
 #include <memory>
 #include <vector>
+#include "simfuncs.h"
 
 class AsyncObservation {
 
 public:
     AsyncObservation(double, double);
 
-    std::tuple<std::tuple<double, double>, std::tuple<double, double>,
-            std::tuple<double, double>> runSimulationAsync(int observations, int dayCount, double confidence);
+    AsyncObservation(double, double, unsigned int);
+
+
+    Results runSimulationAsync(int observations, int dayCount, double confidence);
 
 private:
     double COMPENSATION;
     double OC_PROBABILITY;
+    unsigned int threadsToUse;
 
     std::unique_ptr<std::vector<std::tuple<double, double, int>>>
         runObservationAsync(int id, int observationCounts, int dayCount);

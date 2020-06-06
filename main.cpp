@@ -4,6 +4,7 @@
 #include <iomanip>
 #include <chrono>
 #include "simfuncsasync.h"
+#include "simfuncs.h"
 
 static std::vector<std::tuple<double, double>> defaultCompensations = {{0,   0.01},
                                                                        {.5,  .25},
@@ -21,29 +22,24 @@ void runWithConfidence(int observations, int dayCount, double confidence, double
 
     auto timeEnd = std::chrono::system_clock::now().time_since_epoch() - timeStart;
 
-    std::cout << "Done in " << std::chrono::duration_cast< std::chrono::milliseconds> (timeEnd).count() << " ms" << std::endl;
-
-    auto resultCompensation = std::get<0>(result);
-
-    auto PFCost = std::get<1>(result);
-
-    auto packageResult = std::get<2>(result);
+    std::cout << "Done in " << std::chrono::duration_cast<std::chrono::milliseconds>(timeEnd).count() << " ms"
+              << std::endl;
 
     std::cout << "RESULTS FOR " << compensation << "€ with probability " << oc_probability << std::endl;
 
-    std::cout << std::setprecision(7) << "Compensation: " << "Min: " << std::get<0>(resultCompensation) << " | Max: "
-              << std::get<1>(resultCompensation)
+    std::cout << std::setprecision(7) << "Compensation: " << "Min: " << result.getMinComp() << " | Max: "
+              << result.getMaxComp()
               << std::endl;
 
-    std::cout << "Profession delivery cost: " << "Min: " << std::get<0>(PFCost) << " | Max: " << std::get<1>(PFCost)
+    std::cout << "Profession delivery cost: " << "Min: " << result.getMinPf() << " | Max: " << result.getMaxPf()
               << std::endl;
 
-    std::cout << "Packages in lockers: " << "Min: " << std::get<0>(packageResult) << " | Max: "
-              << std::get<1>(packageResult)
+    std::cout << "Packages in lockers: " << "Min: " << result.getMinPackages() << " | Max: "
+              << result.getMaxPackages()
               << std::endl;
 
-    double totalCostMin = std::get<0>(PFCost) + std::get<0>(resultCompensation),
-            totalCostMax = std::get<1>(PFCost) + std::get<1>(resultCompensation);
+    double totalCostMin = result.getMinTotal(),
+            totalCostMax = result.getMaxTotal();
 
     std::cout << "Total cost: " << std::endl << "Min: " << totalCostMin << " | Max: " << totalCostMax << std::endl;
 }

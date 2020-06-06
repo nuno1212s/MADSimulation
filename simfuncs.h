@@ -7,6 +7,56 @@
 
 class DayInfo;
 
+class Results {
+
+private:
+    double minTotal, maxTotal,
+            minComp, maxComp,
+            minPF, maxPF,
+            minPackages, maxPackages;
+public:
+    Results(double minTotal, double maxTotal, double minComp, double maxComp,
+            double minPF, double maxPF, double minPackages, double maxPackages) :
+            minTotal(minTotal), maxTotal(maxTotal), minComp(minComp), maxComp(maxComp),
+            minPF(minPF), maxPF(maxPF), minPackages(minPackages), maxPackages(maxPackages) {}
+
+    double getMinTotal() const {
+        return minTotal;
+    }
+
+    double getMaxTotal() const {
+        return maxTotal;
+    }
+
+    double getMinComp() const {
+        return minComp;
+    }
+
+    double getMaxComp() const {
+        return maxComp;
+    }
+
+    double getMinPf() const {
+        return minPF;
+    }
+
+    double getMaxPf() const {
+        return maxPF;
+    }
+
+    double getMinPackages() const {
+        return minPackages;
+    }
+
+    double getMaxPackages() const {
+        return maxPackages;
+    }
+
+};
+
+Results doResults(const std::vector<double> &costsPF, const std::vector<double> &costsComp,
+                  const std::vector<int> &maxPackages, int observations, double confidence);
+
 class ObservationHolder {
 
 public:
@@ -14,8 +64,7 @@ public:
 
     std::tuple<double, double, int> runObservation(int dayCount);
 
-    std::tuple<std::tuple<double, double>, std::tuple<double, double>,
-            std::tuple<double, double>> runSimulation(int observations, int dayCount, double confidence);
+    Results runSimulation(int observations, int dayCount, double confidence);
 
 private:
     /*
@@ -26,9 +75,7 @@ private:
      *
      * Using these engines as global variables removes most of the performance benefits.
      */
-    std::default_random_engine engine;
-    std::uniform_int_distribution<int> distribution;
-    std::uniform_real_distribution<double> randomDist;
+    struct drand48_data randBuffer;
     double COMPENSATION;
     double OC_PROBABILITY;
 
@@ -38,7 +85,11 @@ private:
 
     int calculatePackagesTakenByOC(int possibleOCs, int maxPackagesToTake);
 
-    DayInfo simulateDay(int packagesLeftOverLocker, int packagesLeftOverHome);
+    void simulateDay(int packagesLeftOverLocker, int packagesLeftOverHome, DayInfo &info);
+
+    int getRandomDeliveries();
+
+    double getRandomProb();
 };
 
 
