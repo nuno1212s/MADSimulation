@@ -48,6 +48,18 @@ Results AsyncObservation::runSimulation(int observations, int dayCount, double c
         if (i == threadsToUse - 1) {
             //On the last created thread, assign any left over observations to the last thread.
             observationsPerThread += (observations % (int) threadsToUse);
+
+            //Calculate this on the current thread, to make sure all threads are used
+            std::promise<
+                    std::unique_ptr<
+                            std::vector<
+                                    std::tuple<double, double, int>>>> promise;
+
+            promise.set_value(runObservationAsync(0, observationsPerThread, dayCount));
+
+            results[i] = promise.get_future();
+
+            break;
         }
 
         results[i] = threadPool.push([this, observationsPerThread, dayCount](int id) {
