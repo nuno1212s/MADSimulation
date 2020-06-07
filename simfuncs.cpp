@@ -214,7 +214,9 @@ void ObservationHolder::simulateDay(int packagesLeftOverLocker, int packagesLeft
 }
 
 /**
- * Runs an observation, returns the cost of the compensations and the cost of the professional deliveries and the max amount of packages in the locker rooms at the same time
+ * Runs an observation, returns the cost of the compensations and the cost of the professional deliveries
+ * and the max amount of packages in the locker rooms at the same time
+ *
  * @param dayCount
  * @return
  */
@@ -249,7 +251,7 @@ std::tuple<double, double, int> ObservationHolder::runObservation(int dayCount) 
         totalCostCompensation += costByCompensation;
 
         maxPackagesInLocker = std::max(maxPackagesInLocker, (newPackagesHome + newPackagesLocker +
-                                                             packagesLeftOver + deliveredByPF));
+                                                             packagesLeftOver));
 
         packagesLeftOver = packagesLeftOverLocker;
         packagesLeftOverHome = packagesLeftOverForHome;

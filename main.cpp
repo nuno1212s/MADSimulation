@@ -13,11 +13,12 @@ static std::vector<std::tuple<double, double>> defaultCompensations = {{0,   0.0
 
 void runWithConfidence(int observations, int dayCount, double confidence, double compensation, double oc_probability) {
 
-    AsyncObservation observation(compensation, oc_probability);
+    std::unique_ptr<ObservationHolder> observation
+        = std::make_unique<AsyncObservation>(compensation, oc_probability);
 
     auto timeStart = std::chrono::system_clock::now().time_since_epoch();
 
-    auto result = observation.runSimulationAsync(observations, dayCount, confidence);
+    auto result = observation->runSimulation(observations, dayCount, confidence);
 
     auto timeEnd = std::chrono::system_clock::now().time_since_epoch() - timeStart;
 

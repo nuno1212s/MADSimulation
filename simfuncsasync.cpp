@@ -5,12 +5,11 @@
 #include "ctpl.h"
 
 AsyncObservation::AsyncObservation(double compensation, double oc_prob) :
-        COMPENSATION(compensation),
-        OC_PROBABILITY(oc_prob),
+        ObservationHolder(compensation, oc_prob),
         threadsToUse(std::thread::hardware_concurrency()) {}
 
 AsyncObservation::AsyncObservation(double compensation, double oc_prob, unsigned int threads) :
-        COMPENSATION(compensation), OC_PROBABILITY(oc_prob),
+        ObservationHolder(compensation, oc_prob),
         threadsToUse(threads) {}
 
 std::unique_ptr<std::vector<std::tuple<double, double, int>>>
@@ -31,8 +30,7 @@ AsyncObservation::runObservationAsync(int id, int observationCounts, int dayCoun
     return vector;
 }
 
-Results
-AsyncObservation::runSimulationAsync(int observations, int dayCount, double confidence) {
+Results AsyncObservation::runSimulation(int observations, int dayCount, double confidence) {
 
     std::cout << "Running " << observations << " observations on " << threadsToUse << " threads" << std::endl;
 
@@ -85,4 +83,5 @@ AsyncObservation::runSimulationAsync(int observations, int dayCount, double conf
     }
 
     return doResults(costPFData, costCompensationData, packagesInLockers, observations, confidence);
+
 }

@@ -71,8 +71,11 @@ public:
 
     std::tuple<double, double, int> runObservation(int dayCount);
 
-    Results runSimulation(int observations, int dayCount, double confidence);
+    virtual Results runSimulation(int observations, int dayCount, double confidence);
 
+protected:
+    double COMPENSATION;
+    double OC_PROBABILITY;
 private:
     /*
      * We encapsulate the rand buffer data into an observation holder.
@@ -81,8 +84,6 @@ private:
      * Easily with almost linear performance benefits.
      */
     struct drand48_data randBuffer;
-    double COMPENSATION;
-    double OC_PROBABILITY;
 
     std::tuple<int, int> getDeliveriesForDay();
 

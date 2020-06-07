@@ -6,18 +6,16 @@
 #include <vector>
 #include "simfuncs.h"
 
-class AsyncObservation {
+class AsyncObservation : public ObservationHolder {
 
 public:
     AsyncObservation(double, double);
 
     AsyncObservation(double, double, unsigned int);
 
-    Results runSimulationAsync(int observations, int dayCount, double confidence);
+    Results runSimulation(int observations, int dayCount, double confidence) override;
 
 private:
-    double COMPENSATION;
-    double OC_PROBABILITY;
     unsigned int threadsToUse;
 
     std::unique_ptr<std::vector<std::tuple<double, double, int>>>
